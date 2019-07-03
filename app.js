@@ -41,59 +41,35 @@ app.use(session({
 
 }));
 
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+
 function auth(req, res, next) {
-  console.log(req.headers);
 
   if(!req.session.user) {
-
-    var authHeader = req.headers.authorization;
-
-  if(!authHeader) {
-    var err = new Error("You are not authenticaterd");
-    err.status = 401;
-    res.setHeader('WWW-Authenticate', 'Basic');
-    next(err);
-    return;
-
-  }
-
-  var auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString()
-  .split(':');
-
-  var user = auth[0];
-  var pass = auth[1];
-
-  if(user === 'admin' && pass === 'password') {
-    req.session.user = 'admin';
-    next();
+    var err = new Error('YOu are not authenticated');
+    err.status = 403;
+    return next(err);
   }
   else {
-    var err = new Error("You are not authenticaterd");
-    err.status = 401;
-    res.setHeader('WWW-Authenticate', 'Basic');
-    next(err);
-    return;
-  }
-
-}
-  else {
-    if (req.signedCookies.user === 'admin') {
+    if(req.session.user == 'authenticated') {
       next();
+    }
+    else {
+      var err = new Error('YOu are not authenticated');
+      err.status = 403;
+      return next(err);
+    }
+
   }
-  else {
-      var err = new Error('You are not authenticated!');
-      err.status = 401;
-      next(err);
-  }
-}
+
 }
 
 app.use(auth);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+
 app.use('/dishes', dishRouter);
 app.use('/promos', promoRouter);
 app.use('/leaders', leaderRouter);
